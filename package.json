@@ -31,7 +31,7 @@
     "node-cron": "^3.0.3",
     "node-gtts": "^2.0.2",
     "node-webpmux": "^3.2.1",
-    "openai": "^5.20.0",
+    "openai": "^6.0.1",
     "playwright": "^1.55.0",
     "qc-generator-whatsapp": "^2.0.2",
     "qrcode-terminal": "^0.12.0",
