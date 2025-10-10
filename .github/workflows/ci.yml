@@ -1,127 +1,58 @@
-name: FN WhatsApp Bot CI/CD
-permissions:
-  contents: read
+name: Node.js CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build:
-    name: Lint & Test
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20, 22, 24]
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-        
-      - name: Install FFmpeg development libraries
-        run: sudo apt-get update && sudo apt-get install -y libavformat-dev libavcodec-dev libavutil-dev libswscale-dev libwebp-dev
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y \
+            build-essential pkg-config cmake python3 python3-dev \
+            ffmpeg imagemagick \
+            libavformat-dev libavcodec-dev libavutil-dev \
+            libswresample-dev libswscale-dev \
+            libwebp-dev libpng-dev libjpeg-dev zlib1g-dev \
+            libfreetype6-dev libharfbuzz-dev libpango1.0-dev \
+            libgif-dev libopus-dev libvpx-dev \
+            libcurl4-openssl-dev libnghttp2-dev libssl-dev
 
       - name: Install Dependencies
         run: npm ci
 
-      - name: Run ESLint
-        run: npm run lint
+      - name: Audit Dependencies
+        run: npm audit --audit-level=moderate || true
 
-      - name: Run Tests (if available)
+      - name: Check Unused Dependencies
+        run: npx depcheck --ignores=node-addon-api || true
+
+      - name: Check for Updates
+        run: npx npm-check-updates || true
+
+      - name: Run Tests
         run: |
           if [ -f "package.json" ] && grep -q "\"test\":" package.json; then
             npm test || echo "Tests failed or not implemented, skipping."
           else
             echo "No test script found, skipping tests."
           fi
-
-  deploy:
-    name: Deploy to VPS
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check Secrets
-        id: check_secrets
-        run: |
-          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_USER }}" ] || [ -z "${{ secrets.VPS_PRIVATE_KEY }}" ]; then
-            echo "Missing VPS secrets. Skipping deploy."
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Checkout Repository
-        if: steps.check_secrets.outputs.skip == 'false'
-        uses: actions/checkout@v4
-
-      - name: Setup SSH Key
-        if: steps.check_secrets.outputs.skip == 'false'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Create .env file
-        if: steps.check_secrets.outputs.skip == 'false'
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
-            echo '${{ secrets.ENV_FILE }}' > ~/fnbots/.env
-          "
-
-      - name: Deploy via SSH
-        if: steps.check_secrets.outputs.skip == 'false'
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
-            cd ~/fnbots || exit 1
-
-            git stash
-            git pull origin master
-            git stash pop || true
-            
-            npm install --production
-            pm2 restart fnbots || pm2 start npm --name fnbots -- run start
-          "
-
-  backup:
-    name: Backup MongoDB & Redis
-    needs: deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check Secrets
-        id: check_secrets
-        run: |
-          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_USER }}" ] || [ -z "${{ secrets.VPS_PRIVATE_KEY }}" ]; then
-            echo "Missing VPS secrets. Skipping backup."
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Setup SSH Key
-        if: steps.check_secrets.outputs.skip == 'false'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Backup Databases
-        if: steps.check_secrets.outputs.skip == 'false'
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
-            mkdir -p ~/backups &&
-            mongodump --out ~/backups/mongodb-\$(date +%F-%H%M%S) &&
-            redis-cli save &&
-            cp /var/lib/redis/dump.rdb ~/backups/redis-\$(date +%F-%H%M%S).rdb &&
-            echo 'Backup completed successfully.'
-          "

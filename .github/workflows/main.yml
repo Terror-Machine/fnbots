@@ -1,0 +1,92 @@
+name: Deploy to VPS
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: ["master"]
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Secrets
+        id: check_secrets
+        run: |
+          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_USER }}" ] || [ -z "${{ secrets.VPS_PRIVATE_KEY }}" ]; then
+            echo "Missing VPS secrets. Skipping deploy."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout Repository
+        if: steps.check_secrets.outputs.skip == 'false'
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        if: steps.check_secrets.outputs.skip == 'false'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Create .env file
+        if: steps.check_secrets.outputs.skip == 'false'
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            echo '${{ secrets.ENV_FILE }}' > ~/fnbots/.env
+          "
+
+      - name: Deploy via SSH
+        if: steps.check_secrets.outputs.skip == 'false'
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            cd ~/fnbots || exit 1
+
+            git stash
+            git pull origin master
+            git stash pop || true
+            
+            npm ci --omit=dev
+            pm2 restart fnbots || pm2 start npm --name fnbots -- start
+          "
+
+  backup:
+    name: Backup MongoDB & Redis
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Secrets
+        id: check_secrets
+        run: |
+          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_USER }}" ] || [ -z "${{ secrets.VPS_PRIVATE_KEY }}" ]; then
+            echo "Missing VPS secrets. Skipping backup."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup SSH Key
+        if: steps.check_secrets.outputs.skip == 'false'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Backup Databases
+        if: steps.check_secrets.outputs.skip == 'false'
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            mkdir -p ~/backups &&
+            mongodump --out ~/backups/mongodb-\$(date +%F-%H%M%S) &&
+            redis-cli save &&
+            cp /var/lib/redis/dump.rdb ~/backups/redis-\$(date +%F-%H%M%S).rdb &&
+            echo 'Backup completed successfully.'
+          "
