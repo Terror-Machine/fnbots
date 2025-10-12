@@ -61,7 +61,7 @@
     "js-beautify": "^1.15.4",
     "link-preview-js": "^3.1.0",
     "lru-cache": "^11.2.1",
-    "mathjs": "^14.8.1",
+    "mathjs": "^15.0.0",
     "mime-types": "^3.0.1",
     "mongodb": "^6.20.0",
     "mongoose": "^8.18.1",
