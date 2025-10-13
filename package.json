@@ -40,7 +40,7 @@
     "audio-decode": "^2.2.3",
     "awesome-phonenumber": "^7.5.0",
     "axios": "^1.12.2",
-    "baileys": "^7.0.0-rc.3",
+    "baileys": "^7.0.0-rc.5",
     "canvas": "^3.2.0",
     "cheerio": "^1.1.2",
     "chess.js": "^1.4.0",
