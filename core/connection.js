@@ -55,7 +55,7 @@ function parseDisconnectReason(lastDisconnect) {
     502: 'bad_gateway',
     503: 'service_unavailable',
     504: 'gateway_timeout',
-    515: 'protocol_violation',
+    515: 'restart_required',
     516: 'unknown_server_error',
     518: 'connection_replaced',
     540: 'too_many_sessions',
@@ -130,7 +130,7 @@ export async function createWASocket(dbSettings) {
     shouldIgnoreJid: (jid) => {
       return isJidBroadcast(jid) && jid !== 'status@broadcast';
     },
-    browser: Browsers.ubuntu('Chrome'),
+    browser: Browsers.appropriate('Desktop', 'FNBOTS'),
     defaultQueryTimeoutMs: undefined,
     markOnlineOnConnect: false,
     retryRequestDelayMs: 500,
