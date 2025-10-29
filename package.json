@@ -38,7 +38,7 @@
     "attp-generator": "^2.0.1",
     "audio-decode": "^2.2.3",
     "awesome-phonenumber": "^7.5.0",
-    "axios": "^1.13.0",
+    "axios": "^1.13.1",
     "baileys": "^7.0.0-rc.6",
     "canvas": "^3.2.0",
     "cheerio": "^1.1.2",
