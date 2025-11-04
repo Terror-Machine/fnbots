@@ -279,7 +279,7 @@ class BaileysLoggerWrapper {
       })
     );
     this.fileStream = getOrCreateBaileysFileStream();
-    this.fileLogger = pino({ level: 'debug' }, this.fileStream);
+    this.fileLogger = pino({ level: 'trace' }, this.fileStream);
     this._consoleLevel = 'trace';
   }
   get level() {

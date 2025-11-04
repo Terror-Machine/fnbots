@@ -60,10 +60,28 @@ export async function createWASocket(dbSettings) {
       delayBetweenTriesMs: 3000
     },
     connectTimeoutMs: 60_000,
-    keepAliveIntervalMs: 30_000,
-    enableAutoSessionRecreation: true,
-    enableRecentMessageCache: true
+    keepAliveIntervalMs: 30_000
   });
+
+  const originalGetUSyncDevices = fn.getUSyncDevices;
+  fn.getUSyncDevices = async function (jids, useCache, ignoreZeroDevices) {
+    const devices = await originalGetUSyncDevices(jids, useCache, ignoreZeroDevices);
+    const seen = new Set();
+    const unique = [];
+    for (const device of devices) {
+      const key = `${device.user}:${device.device}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(device);
+      } else {
+        await log(`[CRITICAL PATCH] Blocked duplicate device: ${device.jid} (${key})`, true);
+      }
+    }
+    if (unique.length !== devices.length) {
+      await log(`[CRITICAL PATCH] Deduplicated ${devices.length} → ${unique.length} devices`, true);
+    }
+    return unique;
+  };
 
   global.version = version;
 

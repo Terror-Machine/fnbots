@@ -645,5 +645,32 @@ export async function clientBot(fn, dbSettings) {
       return 0;
     }
   };
+  const originalRelayMessage = fn.relayMessage;
+  fn.relayMessage = async function (jid, message, options = {}) {
+    const originalGetUSyncDevices = fn.getUSyncDevices;
+    fn.getUSyncDevices = async function (jids, useCache, ignoreZeroDevices) {
+      const devices = await originalGetUSyncDevices.call(this, jids, useCache, ignoreZeroDevices);
+      const seenUsers = new Map();
+      const uniqueDevices = [];
+      for (const device of devices) {
+        const key = `${device.user}:${device.device}`;
+        if (!seenUsers.has(key)) {
+          seenUsers.set(key, device);
+          uniqueDevices.push(device);
+        } else {
+          await log(`[PATCH] Removed duplicate device: ${device.jid} (user: ${device.user}, device: ${device.device})`, true);
+        }
+      }
+      if (uniqueDevices.length !== devices.length) {
+        await log(`[PATCH] Deduplicated devices: ${devices.length} → ${uniqueDevices.length}`, true);
+      }
+      return uniqueDevices;
+    };
+    try {
+      return await originalRelayMessage.call(this, jid, message, options);
+    } finally {
+      fn.getUSyncDevices = originalGetUSyncDevices;
+    }
+  };
   return fn;
 }
