@@ -38,7 +38,7 @@
     "async-mutex": "^0.5.0",
     "attp-generator": "^2.0.2",
     "audio-decode": "^2.2.3",
-    "awesome-phonenumber": "^7.5.0",
+    "awesome-phonenumber": "^7.6.0",
     "baileys": "7.0.0-rc.6",
     "canvas": "^3.2.0",
     "cheerio": "^1.1.2",
