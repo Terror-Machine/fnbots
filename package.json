@@ -62,7 +62,7 @@
     "mathjs": "^15.1.0",
     "mime-types": "^3.0.1",
     "mongodb": "^7.0.0",
-    "mongoose": "^8.19.3",
+    "mongoose": "^8.20.0",
     "node-gtts": "github:Terror-Machine/node-gtts",
     "openai": "^6.8.1",
     "p-queue": "^9.0.0",
