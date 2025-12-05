@@ -55,7 +55,7 @@
     "generator-fake": "^2.0.4",
     "image-size": "^2.0.2",
     "ioredis": "^5.8.2",
-    "javascript-obfuscator": "^4.2.0",
+    "javascript-obfuscator": "^4.2.1",
     "js-beautify": "^1.15.4",
     "link-preview-js": "3.2.0",
     "lru-cache": "^11.2.4",
