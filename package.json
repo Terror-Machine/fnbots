@@ -64,7 +64,7 @@
     "mongodb": "^7.0.0",
     "mongoose": "^9.0.0",
     "node-gtts": "github:Terror-Machine/node-gtts",
-    "openai": "^6.9.1",
+    "openai": "^6.13.0",
     "p-queue": "^9.0.1",
     "pino": "^10.1.0",
     "playwright": "^1.57.0",
