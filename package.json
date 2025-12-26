@@ -48,7 +48,7 @@
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.3",
     "emoji-cache": "^2.0.4",
-    "file-type": "^21.1.1",
+    "file-type": "^21.2.0",
     "form-data": "^4.0.5",
     "fs-extra": "^11.3.3",
     "fuse.js": "^7.1.0",
