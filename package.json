@@ -65,7 +65,7 @@
     "mongoose": "^9.1.1",
     "node-gtts": "github:Terror-Machine/node-gtts",
     "openai": "^6.15.0",
-    "p-queue": "^9.0.1",
+    "p-queue": "^9.1.0",
     "pino": "^10.1.0",
     "playwright": "^1.57.0",
     "qc-generator-whatsapp": "^2.0.2",
