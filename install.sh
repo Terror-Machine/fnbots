@@ -492,8 +492,8 @@ install_python() {
 }
 
 install_nodejs() {
-    print_step "Menginstall Node.js v20.x..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO_CMD bash -
+    print_step "Menginstall Node.js v22.x..."
+    curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO_CMD bash -
     $SUDO_CMD apt-get install -y nodejs
     $SUDO_CMD npm install -g npm@latest
     print_success "Node.js $(node -v) dan npm $(npm -v) berhasil diinstall"
