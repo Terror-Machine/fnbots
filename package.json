@@ -39,7 +39,7 @@
     "attp-generator": "^2.0.2",
     "audio-decode": "^2.2.3",
     "awesome-phonenumber": "^7.8.0",
-    "baileys": "7.0.0-rc.9",
+    "baileys": "^7.0.0-rc14",
     "canvas": "^3.2.3",
     "cheerio": "^1.2.0",
     "chess.js": "^1.4.0",
@@ -110,5 +110,12 @@
     "bracketSameLine": true,
     "quoteProps": "preserve",
     "overrides": []
+  },
+  "allowScripts": {
+    "lzma-native@4.0.6": true,
+    "sharp@0.34.5": true,
+    "protobufjs@7.6.6": true,
+    "baileys@7.0.0-rc.14": true,
+    "@parcel/watcher@2.6.0": true
   }
 }

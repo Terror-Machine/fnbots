@@ -87,13 +87,29 @@ update_python_packages() {
         "g4f[all]"
         "rembg"
         "Pillow"
-        "sticker-convert"
     )
-    
-    if venv/bin/pip install --upgrade "${PACKAGES[@]}"; then
-        print_success "Package Python berhasil diupdate"
+    FAILED=()
+    for pkg in "${PACKAGES[@]}"; do
+        print_info "Menginstall $pkg ..."
+        if venv/bin/pip install --upgrade "$pkg"; then
+            print_success "$pkg berhasil"
+        else
+            print_warning "$pkg gagal"
+            FAILED+=("$pkg")
+        fi
+    done
+    # sticker-convert: jangan compile dari source (av butuh ffmpeg 7)
+    print_info "Menginstall sticker-convert (binary only) ..."
+    if venv/bin/pip install --upgrade --only-binary=:all: sticker-convert; then
+        print_success "sticker-convert berhasil"
     else
-        print_warning "Beberapa package mungkin gagal diupdate"
+        print_warning "sticker-convert gagal"
+        FAILED+=("sticker-convert")
+    fi
+    if [ ${#FAILED[@]} -eq 0 ]; then
+        print_success "Semua package Python berhasil diupdate"
+    else
+        print_warning "Package yang gagal: ${FAILED[*]}"
     fi
 }
 
